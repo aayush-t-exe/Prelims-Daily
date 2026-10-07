@@ -43,6 +43,19 @@ export async function requestPermission(): Promise<boolean> {
   }
 }
 
+const DAILY_KIND = 'daily-reminder';
+const TEST_KIND = 'test-reminder';
+
+/** Cancel the daily reminders, but not a test notification that's about to fire. */
+async function cancelDailyReminders() {
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    all
+      .filter((n) => n.content.data?.kind !== TEST_KIND)
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
+}
+
 export interface ReminderInput {
   enabled: boolean;
   hour: number;
@@ -82,7 +95,7 @@ export function reminderCopy(dayOffset: number, r: ReminderInput): { title: stri
 }
 
 /**
- * Cancel everything, then schedule one-off reminders for the next 7 days.
+ * Cancel our old reminders, then schedule one-off reminders for the next 7 days.
  * Today is skipped if the set is already done or the time has passed.
  * One-off date triggers (instead of a repeating daily one) let each day have its own copy
  * and let us skip days that are already done.
@@ -90,7 +103,8 @@ export function reminderCopy(dayOffset: number, r: ReminderInput): { title: stri
 export async function scheduleNext7Days(r: ReminderInput): Promise<number> {
   if (!supported) return 0;
   try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    await cancelDailyReminders();
+    setNextReminder(null);
     if (!r.enabled) return 0;
     const perm = await Notifications.getPermissionsAsync();
     if (!perm.granted) return 0;
@@ -99,13 +113,14 @@ export async function scheduleNext7Days(r: ReminderInput): Promise<number> {
     const now = new Date();
     const today = localDate(now);
     let count = 0;
+    let first: Date | null = null;
     for (let i = 0; i < 7; i++) {
       if (i === 0 && r.doneToday) continue;
       const [y, m, d] = addDays(today, i).split('-').map(Number);
       const when = new Date(y, m - 1, d, r.hour, r.minute, 0, 0);
       if (when.getTime() <= now.getTime() + 5_000) continue;
       await Notifications.scheduleNotificationAsync({
-        content: { ...reminderCopy(i, r), sound: false },
+        content: { ...reminderCopy(i, r), sound: false, data: { kind: DAILY_KIND } },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: when,
@@ -113,11 +128,48 @@ export async function scheduleNext7Days(r: ReminderInput): Promise<number> {
         },
       });
       count++;
+      first ??= when;
     }
+    setNextReminder(first);
     return count;
   } catch {
     // A reminder failing should never crash the app.
+    setNextReminder(null);
     return 0;
+  }
+}
+
+// --- "Next reminder" status, so the user can see what's actually scheduled ---
+let nextReminder: Date | null = null;
+const listeners = new Set<() => void>();
+function setNextReminder(d: Date | null) {
+  nextReminder = d;
+  listeners.forEach((l) => l());
+}
+export const nextReminderStore = {
+  get: () => nextReminder,
+  subscribe: (l: () => void) => {
+    listeners.add(l);
+    return () => listeners.delete(l);
+  },
+};
+
+/** Fires a sample reminder in 5 seconds, to check notifications work on this phone. */
+export async function sendTestReminder(): Promise<boolean> {
+  if (!supported) return false;
+  if (!(await requestPermission())) return false;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🔥 Test reminder',
+        body: 'Reminders are working. See you at your daily time!',
+        data: { kind: TEST_KIND },
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 5, channelId: CHANNEL_ID },
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 

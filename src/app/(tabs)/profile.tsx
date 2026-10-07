@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Platform, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withDelay, withSpring } from 'react-native-reanimated';
 
@@ -9,10 +9,19 @@ import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { TimePicker } from '@/components/TimePicker';
 import { SUBJECT_SHORT, SUBJECTS, type Subject } from '@/data/questions';
+import { addDays, localDate } from '@/logic/date';
 import { levelFor } from '@/logic/xp';
-import { formatTime, requestPermission } from '@/notifications';
+import { formatTime, nextReminderStore, requestPermission, sendTestReminder } from '@/notifications';
 import { subjectAccuracy, useAppStore } from '@/store/useAppStore';
 import { colors, radius, space, type } from '@/theme';
+
+function describeDay(d: Date) {
+  const today = localDate();
+  const day = localDate(d);
+  if (day === today) return 'today';
+  if (day === addDays(today, 1)) return 'tomorrow';
+  return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+}
 
 function StatTile({ icon, value, label }: { icon: keyof typeof Ionicons.glyphMap; value: string; label: string }) {
   return (
@@ -62,6 +71,9 @@ export default function Profile() {
   const [editingTime, setEditingTime] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [permDenied, setPermDenied] = useState(false);
+  const [testState, setTestState] = useState<'idle' | 'sent' | 'failed'>('idle');
+  const nextReminder = useSyncExternalStore(nextReminderStore.subscribe, nextReminderStore.get, () => null);
+  const doneToday = streak.lastCompletedDate === localDate();
 
   const totals = SUBJECTS.reduce(
     (t, s) => ({ attempts: t.attempts + (stats[s]?.attempts ?? 0), correct: t.correct + (stats[s]?.correct ?? 0) }),
@@ -140,6 +152,22 @@ export default function Profile() {
                     style={{ minHeight: 44 }}
                   />
                 </View>
+                <Text style={styles.hint}>
+                  {nextReminder
+                    ? `Next reminder: ${describeDay(nextReminder)}, ${formatTime(nextReminder.getHours(), nextReminder.getMinutes())}`
+                    : 'Scheduling…'}
+                  {doneToday ? " (today's set is done, so today is skipped)" : ''}
+                </Text>
+                <Button
+                  label={testState === 'sent' ? 'Sent! Arrives in 5 seconds' : 'Send a test reminder'}
+                  variant="ghost"
+                  icon={<Ionicons name="notifications-outline" size={18} color={colors.primary} />}
+                  onPress={async () => {
+                    const ok = await sendTestReminder();
+                    setTestState(ok ? 'sent' : 'failed');
+                    if (!ok) setPermDenied(true);
+                  }}
+                />
                 {editingTime && (
                   <Animated.View entering={FadeIn} exiting={FadeOut}>
                     <TimePicker
