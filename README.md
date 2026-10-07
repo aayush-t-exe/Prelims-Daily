@@ -6,9 +6,25 @@ Most aspirants don't fail for lack of material. They fail for lack of consistenc
 
 Built by **Aayush Thakur**.
 
+## Try it
+
+- **Android APK:** [download and install](https://expo.dev/artifacts/eas/ZyqMtbGDqKRKjswQCIaNNWd2-bsEVJWet3HekorOpg0.apk). Allow "install unknown apps" when asked.
+- **Run from source in Expo Go (SDK 57):** `npm install && npx expo start`, then scan the QR code.
+
 ## Screenshots
 
-_Screenshots coming soon_
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/today.jpg" width="200" alt="Today screen with streak flame, daily target ring, week dots, level and weak-area chips"><br><sub><b>Today</b>: streak, target ring, weak areas</sub></td>
+    <td align="center"><img src="docs/screenshots/quiz.jpg" width="200" alt="Quiz screen with a statement-based question, the correct answer highlighted and an explanation"><br><sub><b>Quiz</b>: instant feedback and explanation</sub></td>
+    <td align="center"><img src="docs/screenshots/result.jpg" width="200" alt="Result screen with an animated score ring, XP earned and streak"><br><sub><b>Result</b>: score ring, XP, streak</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/profile.jpg" width="200" alt="Profile screen with stats and accuracy by subject"><br><sub><b>Profile</b>: accuracy by subject</sub></td>
+    <td align="center"><img src="docs/screenshots/reminders.jpg" width="200" alt="Settings showing daily target, reminder toggle and the next reminder skipping today because the set is done"><br><sub><b>Smart reminders</b>: skip days you've finished</sub></td>
+    <td></td>
+  </tr>
+</table>
 
 ## Features
 
