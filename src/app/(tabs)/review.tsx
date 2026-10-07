@@ -27,6 +27,21 @@ const ReviewCard = memo(function ReviewCard({
   const [open, setOpen] = useState(false);
   return (
     <Animated.View layout={LinearTransition.springify().damping(20)} style={styles.card}>
+      {/* The star sits beside (not inside) the expand button: nested buttons are invalid on web. */}
+      <View style={styles.cardHead}>
+        <Text style={styles.meta}>
+          {SUBJECT_SHORT[q.subject]} · {q.difficulty}
+        </Text>
+        <Pressable
+          onPress={() => onToggleBookmark(q.id)}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+          style={styles.star}
+        >
+          <Ionicons name={bookmarked ? 'star' : 'star-outline'} size={22} color={bookmarked ? colors.accent : colors.muted} />
+        </Pressable>
+      </View>
       <Pressable
         onPress={() => {
           tapHaptic();
@@ -36,20 +51,6 @@ const ReviewCard = memo(function ReviewCard({
         accessibilityState={{ expanded: open }}
         accessibilityHint={open ? 'Hides the answer' : 'Shows the answer and explanation'}
       >
-        <View style={styles.cardHead}>
-          <Text style={styles.meta}>
-            {SUBJECT_SHORT[q.subject]} · {q.difficulty}
-          </Text>
-          <Pressable
-            onPress={() => onToggleBookmark(q.id)}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
-            style={styles.star}
-          >
-            <Ionicons name={bookmarked ? 'star' : 'star-outline'} size={22} color={bookmarked ? colors.accent : colors.muted} />
-          </Pressable>
-        </View>
         <Text style={styles.q} numberOfLines={open ? undefined : 3}>
           {q.question}
         </Text>

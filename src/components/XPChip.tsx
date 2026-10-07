@@ -46,7 +46,7 @@ export function XPChip({ amount, rise = 140, onDone }: Props) {
   }));
 
   return (
-    <Animated.View pointerEvents="none" style={[styles.chip, style]}>
+    <Animated.View style={[styles.chip, style]}>
       <Text style={styles.text}>+{amount} XP</Text>
     </Animated.View>
   );
@@ -55,6 +55,7 @@ export function XPChip({ amount, rise = 140, onDone }: Props) {
 const styles = StyleSheet.create({
   chip: {
     position: 'absolute',
+    pointerEvents: 'none',
     alignSelf: 'center',
     top: '40%',
     backgroundColor: colors.accent,

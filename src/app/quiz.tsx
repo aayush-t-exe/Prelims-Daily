@@ -21,6 +21,7 @@ import { Button, tapHaptic } from '@/components/Button';
 import { OptionButton, type OptionState } from '@/components/OptionButton';
 import { XPChip } from '@/components/XPChip';
 import { getQuestion, SUBJECT_SHORT } from '@/data/questions';
+import { localDate } from '@/logic/date';
 import { useAppStore } from '@/store/useAppStore';
 import { colors, MAX_WIDTH, radius, shadow, space, type } from '@/theme';
 
@@ -30,19 +31,27 @@ const haptic = (kind: Haptics.NotificationFeedbackType) => {
 
 export default function Quiz() {
   const ensureTodaySet = useAppStore((s) => s.ensureTodaySet);
-  const progress = useAppStore((s) => s.progress);
+  const stored = useAppStore((s) => s.progress);
+  // Only today's set counts; a stale one from yesterday is replaced by the effect below.
+  const progress = stored?.date === localDate() ? stored : null;
   const xp = useAppStore((s) => s.xp);
   const bookmarks = useAppStore((s) => s.bookmarks);
   const answer = useAppStore((s) => s.answer);
   const toggleBookmark = useAppStore((s) => s.toggleBookmark);
   const completeSet = useAppStore((s) => s.completeSet);
 
-  // Create today's set if missing, then resume at the first unanswered question.
-  const [index, setIndex] = useState(() => {
-    const p = ensureTodaySet();
-    const firstOpen = p.setIds.findIndex((id) => !(id in p.answers));
-    return firstOpen === -1 ? p.setIds.length - 1 : firstOpen;
-  });
+  // Create today's set if missing (a store write, so it belongs in an effect, not in render).
+  useEffect(() => {
+    ensureTodaySet();
+  }, [ensureTodaySet]);
+
+  // Resume at the first unanswered question, decided once when the set is available.
+  // (Setting our own state during render is React's pattern for deriving initial state from props.)
+  const [index, setIndex] = useState<number | null>(null);
+  if (index === null && progress) {
+    const firstOpen = progress.setIds.findIndex((id) => !(id in progress.answers));
+    setIndex(firstOpen === -1 ? progress.setIds.length - 1 : firstOpen);
+  }
   const [chips, setChips] = useState<{ key: number; amount: number }[]>([]);
   const chipKey = useRef(0);
 
@@ -69,7 +78,7 @@ export default function Quiz() {
 
   const removeChip = useCallback((key: number) => setChips((c) => c.filter((x) => x.key !== key)), []);
 
-  if (!progress) return null;
+  if (!progress || index === null) return null;
   const id = progress.setIds[index];
   const q = getQuestion(id);
   if (!q) return null;

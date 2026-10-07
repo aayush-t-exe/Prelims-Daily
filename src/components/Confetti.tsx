@@ -67,7 +67,7 @@ export function Confetti() {
   }, [width]);
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       {pieces.map((p, i) => (
         <Piece key={i} spec={p} height={height} />
       ))}

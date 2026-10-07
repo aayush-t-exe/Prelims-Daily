@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "prelimsdaily",
     "userInterfaceStyle": "light",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1E3A8A",

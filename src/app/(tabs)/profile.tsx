@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   barLabel: { ...type.label, color: colors.text },
   barValue: { ...type.caption, color: colors.muted, fontVariant: ['tabular-nums'] },
   track: { height: 8, borderRadius: radius.pill, backgroundColor: colors.track, overflow: 'hidden' },
-  fill: { height: '100%', width: '100%', borderRadius: radius.pill, transformOrigin: 'left' },
+  fill: { height: '100%', width: '100%', transformOrigin: 'left' },
   setRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   setLabel: { ...type.label, fontSize: 16, color: colors.text },
   hint: { ...type.caption, fontSize: 13, color: colors.muted },
