@@ -51,29 +51,33 @@ export interface ReminderInput {
   /** answered so far in today's set, and its size */
   answeredToday: number;
   target: number;
-  streak: number;
+  /** daily target for future days (may differ from today's set size after a settings change) */
+  nextTarget: number;
+  /** the streak still alive on each of the next 7 days if nothing more is done (0 = broken) */
+  streakByDay: number[];
 }
 
 /** Streak-aware copy. Pure, so it's easy to reason about. */
 export function reminderCopy(dayOffset: number, r: ReminderInput): { title: string; body: string } {
-  const minutes = Math.max(1, Math.round(r.target * 0.8));
+  const target = dayOffset === 0 ? r.target : r.nextTarget;
+  const streak = r.streakByDay[dayOffset] ?? 0;
+  const minutes = Math.max(1, Math.round(target * 0.8));
   if (dayOffset === 0 && r.answeredToday > 0) {
     const left = r.target - r.answeredToday;
     return {
       title: `${left} question${left === 1 ? '' : 's'} left`,
-      body: r.streak > 0 ? `Finish today's set to save your ${r.streak}-day streak.` : "You're nearly there. Finish today's set.",
+      body: streak > 0 ? `Finish today's set to save your ${streak}-day streak.` : "You're nearly there. Finish today's set.",
     };
   }
-  // On later days the streak will have grown by one if today gets done; keep the copy simple.
-  if (r.streak > 0) {
+  if (streak > 0) {
     return {
-      title: `🔥 Your ${r.streak}-day streak is waiting`,
-      body: `${r.target} questions, about ${minutes} min. Keep the chain going.`,
+      title: `🔥 Your ${streak}-day streak is waiting`,
+      body: `${target} questions, about ${minutes} min. Keep the chain going.`,
     };
   }
   return {
     title: "Today's Prelims set is ready",
-    body: `${r.target} questions, about ${minutes} min. Small steps, every day.`,
+    body: `${target} questions, about ${minutes} min. Small steps, every day.`,
   };
 }
 

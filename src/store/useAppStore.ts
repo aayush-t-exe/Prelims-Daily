@@ -103,28 +103,70 @@ function newSet(s: Data, today: string, round: number, servedToday: string[]): P
   };
 }
 
-/** Defensive check of what came out of storage. Anything malformed → defaults, never a crash. */
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
+const isIdList = (v: unknown): v is string[] => Array.isArray(v) && v.every((id) => typeof id === 'string');
+
+/** A saved set is only resumable if every part is intact and every question still exists. */
+function validProgress(v: unknown): v is Progress {
+  return (
+    isObj(v) &&
+    typeof v.date === 'string' &&
+    typeof v.round === 'number' &&
+    typeof v.completed === 'boolean' &&
+    isObj(v.answers) &&
+    isIdList(v.servedToday) &&
+    isIdList(v.setIds) &&
+    v.setIds.length > 0 &&
+    v.setIds.every((id) => getQuestion(id))
+  );
+}
+
+/**
+ * Defensive check of what came out of storage. Core fields malformed → defaults;
+ * secondary fields malformed → just that field resets. Never a crash, never a soft-lock.
+ */
 export function sanitize(persisted: unknown): Data {
-  if (!persisted || typeof persisted !== 'object') return defaults;
+  if (!isObj(persisted)) return defaults;
   const p = persisted as Partial<Data>;
-  const isObj = (v: unknown) => !!v && typeof v === 'object' && !Array.isArray(v);
   const ok =
     (p.profile === null || isObj(p.profile)) &&
     isObj(p.streak) &&
-    typeof p.streak?.current === 'number' &&
-    typeof p.xp === 'number' &&
-    isObj(p.stats) &&
-    Array.isArray(p.bookmarks) &&
-    Array.isArray(p.mistakes);
+    typeof p.streak.current === 'number' &&
+    typeof p.xp === 'number';
   if (!ok) return defaults;
   return {
     ...defaults,
-    ...p,
+    profile: p.profile ?? null,
+    xp: p.xp!,
+    streak: { ...initialStreak, ...p.streak!, history: isObj(p.streak!.history) ? p.streak!.history : {} },
+    progress: validProgress(p.progress) ? p.progress : null,
+    stats: isObj(p.stats) ? p.stats : {},
+    lastSeen: isObj(p.lastSeen) ? (p.lastSeen as Record<string, string>) : {},
     // Drop ids that no longer exist in the question bank.
-    bookmarks: p.bookmarks!.filter((id) => getQuestion(id)),
-    mistakes: p.mistakes!.filter((id) => getQuestion(id)),
-  } as Data;
+    bookmarks: isIdList(p.bookmarks) ? p.bookmarks.filter((id) => getQuestion(id)) : [],
+    mistakes: isIdList(p.mistakes) ? p.mistakes.filter((id) => getQuestion(id)) : [],
+    lastResult: isObj(p.lastResult) ? (p.lastResult as unknown as SetResult) : null,
+  };
 }
+
+/**
+ * AsyncStorage wrapped so a failed read or corrupt JSON behaves like "nothing saved".
+ * Otherwise zustand's hydration rejects, never finishes, and the app sits on the splash.
+ */
+const safeStorage = createJSONStorage<Data>(() => ({
+  getItem: async (key) => {
+    try {
+      const raw = await AsyncStorage.getItem(key);
+      if (raw === null) return null;
+      JSON.parse(raw); // validate here, so a parse error can't escape into zustand
+      return raw;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key, value) => AsyncStorage.setItem(key, value).catch(() => {}),
+  removeItem: (key) => AsyncStorage.removeItem(key).catch(() => {}),
+}));
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -239,14 +281,20 @@ export const useAppStore = create<AppState>()(
     {
       name: 'prelims-daily',
       version: STORE_VERSION,
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: safeStorage,
       partialize: (s) => {
         const { profile, progress, streak, xp, stats, lastSeen, bookmarks, mistakes, lastResult } = s;
         return { profile, progress, streak, xp, stats, lastSeen, bookmarks, mistakes, lastResult };
       },
       // Future schema changes go here (e.g. `if (version < 2) …`). Unknown → safe defaults.
       migrate: (persisted, version) => (version === STORE_VERSION ? sanitize(persisted) : defaults),
-      merge: (persisted, current) => ({ ...current, ...sanitize(persisted) }),
+      merge: (persisted, current) => {
+        try {
+          return { ...current, ...sanitize(persisted) };
+        } catch {
+          return { ...current, ...defaults };
+        }
+      },
     },
   ),
 );

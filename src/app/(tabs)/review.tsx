@@ -74,7 +74,7 @@ const ReviewCard = memo(function ReviewCard({
 });
 
 export default function Review() {
-  const params = useLocalSearchParams<{ tab?: string }>();
+  const params = useLocalSearchParams<{ tab?: string; t?: string }>();
   const [tab, setTab] = useState<Tab>(params.tab === 'mistakes' ? 'mistakes' : 'bookmarks');
   const [query, setQuery] = useState('');
   const [subject, setSubject] = useState<Subject | null>(null);
@@ -84,9 +84,10 @@ export default function Review() {
 
   // Deep link from the result screen (/review?tab=mistakes). Adjusting state during render
   // when the param changes is React's recommended alternative to a syncing useEffect.
-  const [lastParam, setLastParam] = useState(params.tab);
-  if (params.tab !== lastParam) {
-    setLastParam(params.tab);
+  const paramKey = `${params.tab}:${params.t}`;
+  const [lastParam, setLastParam] = useState(paramKey);
+  if (paramKey !== lastParam) {
+    setLastParam(paramKey);
     if (params.tab === 'mistakes' || params.tab === 'bookmarks') setTab(params.tab);
   }
 

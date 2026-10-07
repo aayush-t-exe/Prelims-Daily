@@ -105,7 +105,9 @@ export function buildDailySet({
     // Weak picks only come from the fresh pool, so weighting never forces repeats.
     const freshWeak = fresh.filter((q) => weak.has(q.subject));
     for (const q of freshWeak.slice(0, Math.round(n / 2))) picked.push(q);
-    take((q) => !weak.has(q.subject), n);
+    // Fill with fresh non-weak questions; repeats only come from the final fallback below.
+    const freshSet = new Set(fresh);
+    take((q) => !weak.has(q.subject) && freshSet.has(q), n);
   }
   take(() => true, n);
 

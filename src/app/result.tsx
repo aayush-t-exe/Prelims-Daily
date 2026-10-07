@@ -111,10 +111,12 @@ export default function Result() {
             <Button
               label={`Review ${mistakes} mistake${mistakes === 1 ? '' : 's'}`}
               variant="ghost"
-              onPress={() => router.replace({ pathname: '/review', params: { tab: 'mistakes' } })}
+              // dismissTo pops back to the existing tabs instead of stacking a new copy of them.
+              // `t` makes each visit a new param, so Review switches to Mistakes every time.
+              onPress={() => router.dismissTo({ pathname: '/review', params: { tab: 'mistakes', t: String(Date.now()) } })}
             />
           )}
-          <Button label="Back to home" onPress={() => router.replace('/')} />
+          <Button label="Back to home" onPress={() => router.dismissTo('/')} />
         </Animated.View>
       </Screen>
       {celebrate && <Confetti />}

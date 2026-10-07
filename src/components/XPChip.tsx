@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, {
   Easing,
@@ -26,19 +26,26 @@ export function XPChip({ amount, rise = 140, onDone }: Props) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.6);
 
+  // Keep the latest onDone without restarting the animation when the parent re-renders.
+  const doneRef = useRef(onDone);
   useEffect(() => {
+    doneRef.current = onDone;
+  });
+
+  useEffect(() => {
+    const finish = () => doneRef.current();
     scale.value = withSpring(1, { damping: 10, stiffness: 220 });
     opacity.value = withSequence(
       withTiming(1, { duration: 120 }),
       withDelay(
         420,
         withTiming(0, { duration: 260 }, (finished) => {
-          if (finished) scheduleOnRN(onDone);
+          if (finished) scheduleOnRN(finish);
         }),
       ),
     );
     y.value = withDelay(180, withTiming(-rise, { duration: 620, easing: Easing.in(Easing.cubic) }));
-  }, [y, opacity, scale, rise, onDone]);
+  }, [y, opacity, scale, rise]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
