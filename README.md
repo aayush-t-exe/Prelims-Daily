@@ -89,7 +89,7 @@ src/app         Expo Router screens: read from the store, compose components.
 npx jest
 ```
 
-4 suites, 66 tests, all passing. They cover local-date math, streak transitions (continue, freeze, reset, earning freezes), XP and level curves, and daily-set determinism, weak-subject weighting and recency rules.
+5 suites, 72 tests, all passing. They cover local-date math, streak transitions (continue, freeze, reset, earning freezes), XP and level curves, daily-set determinism, weak-subject weighting and recency rules, and loading saved state safely (garbage, stale question ids and partial sets fall back instead of crashing).
 
 ```bash
 npm run typecheck   # tsc --noEmit
