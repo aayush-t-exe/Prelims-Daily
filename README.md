@@ -8,6 +8,8 @@ Most aspirants don't fail for lack of material. They fail for lack of consistenc
 
 Built by **[Aayush Thakur](https://aayushthakur.vercel.app)** · [Case study](https://aayushthakur.vercel.app/work/prelimsdaily)
 
+[![CI: lint, typecheck and tests](https://github.com/aayush-t-exe/prelims-daily/actions/workflows/ci.yml/badge.svg)](https://github.com/aayush-t-exe/prelims-daily/actions/workflows/ci.yml)
+
 ## Built in one day
 
 I built PrelimsDaily in a single day as part of a startup application, from an empty repo to a tested app. To make that work, the rules (streaks, freezes, XP, the daily set) are pure functions with **72 unit tests**, the saved state has a versioned schema that falls back safely when something is malformed, and every trade-off is written down below.
