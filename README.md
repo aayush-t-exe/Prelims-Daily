@@ -1,10 +1,16 @@
+<img src="docs/hero.jpg" alt="PrelimsDaily: a daily UPSC Prelims practice app. Built in 1 day, 72 tests, Expo and TypeScript." width="100%">
+
 # PrelimsDaily
 
 **A 10-minute daily habit for UPSC Prelims: one focused question set a day, with streaks, a daily target ring, XP, and reminders that adapt to your streak.**
 
 Most aspirants don't fail for lack of material. They fail for lack of consistency. PrelimsDaily makes practice small, daily and rewarding: open the app, finish today's set, keep the flame alive. It runs fully offline, in Expo Go, on Android, iOS and web.
 
-Built by **Aayush Thakur**.
+Built by **[Aayush Thakur](https://aayushthakur.vercel.app)** · [Case study](https://aayushthakur.vercel.app/work/prelimsdaily)
+
+## Built in one day
+
+I built PrelimsDaily in a single day as part of a startup application, from an empty repo to a tested app. To make that work, the rules (streaks, freezes, XP, the daily set) are pure functions with **72 unit tests**, the saved state has a versioned schema that falls back safely when something is malformed, and every trade-off is written down below.
 
 ## Try it
 
