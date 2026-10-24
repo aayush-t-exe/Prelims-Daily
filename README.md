@@ -14,7 +14,7 @@ I built PrelimsDaily in a single day as part of a startup application, from an e
 
 ## Try it
 
-- **Android APK:** [download and install](https://expo.dev/artifacts/eas/ZyqMtbGDqKRKjswQCIaNNWd2-bsEVJWet3HekorOpg0.apk). Allow "install unknown apps" when asked.
+- **Android APK:** [download PrelimsDaily.apk](https://github.com/aayush-t-exe/Prelims-Daily/releases/latest/download/PrelimsDaily.apk) from the [latest release](https://github.com/aayush-t-exe/Prelims-Daily/releases/latest). Allow "install unknown apps" when asked.
 - **Run from source in Expo Go (SDK 57):** `npm install && npx expo start`, then scan the QR code.
 
 ## Screenshots
